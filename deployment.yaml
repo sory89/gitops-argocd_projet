@@ -20,7 +20,7 @@ spec:
         app: web
     spec:
       containers:
-      - name: webapp
+      - name: webapp-container
         image: sorydiallo89/gitops-argocd-app:v1
         imagePullPolicy: Always
         ports:

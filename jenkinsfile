@@ -51,17 +51,6 @@ pipeline {
             }
         }
         
-        stage('Updating Kubernetes deployment file') {
-            steps {
-                script {
-                    sh """
-                    cat deployment.yaml
-                    sed -i 's/${APP_NAME}.*/${APP_NAME}/g' deployment.yaml
-                    cat deployment.yaml
-                    """
-                }
-            }
-        }
         stage('Deploy to ArgoCD') {
             steps {
                 script {
