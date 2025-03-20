@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-app-container
-        image: sorydiallo89/gitops-argocd-app:v1
+        image: sorydiallo89/gitops-argocd-app:latest
         imagePullPolicy: Always
         resources:
           limits:
