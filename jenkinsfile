@@ -5,7 +5,7 @@ pipeline {
         DOCKER_USERNAME = "sorydiallo89"
         APP_NAME = "gitops-argocd_app"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        IMAGE_NAME = "${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}"
+        IMAGE_NAME = "${DOCKER_USERNAME}/${APP_NAME}"
         REGISTRY_CREDS = "dockerhub"
     }
 
@@ -15,18 +15,61 @@ pipeline {
                 cleanWs()
             }
         }
+
         stage('Checkout SCM') {
             steps {
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/sory89/gitops-argocd_projet.git'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME} ."
-                    sh "echo Docker image built: ${IMAGE_NAME}"
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                    sh "echo Docker image built: ${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: REGISTRY_CREDS, url: '']) {
+                        sh "docker push ${IMAGE_NAME}:latest"
+                        sh "echo Docker image pushed: ${IMAGE_NAME}:${IMAGE_TAG} and ${IMAGE_NAME}:latest"
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup Docker Images') {
+            steps {
+                script {
+                    echo "Deleting local Docker images: ${IMAGE_NAME}"
+                    sh "docker rmi -f ${IMAGE_NAME}:latest || true"
+                }
+            }
+        }
+        
+        stage('Updating Kubernetes deployment file') {
+            steps {
+                script {
+                    sh """
+                    cat deployment.yml
+                    sed -i 's/${APP_NAME}.*/${APP_NAME}/g' deployment.yml
+                    cat deployment.yml
+                    """
+                }
+            }
+        }
+        stage('Deploy to ArgoCD') {
+            steps {
+                script {
+                    echo "Deploying ${IMAGE_NAME}:latest to ArgoCD"
+                    // Ajoute ici la commande pour mettre à jour ArgoCD si nécessaire
+                    // Exemple : sh "kubectl set image deployment/app ${APP_NAME}=${IMAGE_NAME}:latest"
                 }
             }
         }
     }
-} 
+}
